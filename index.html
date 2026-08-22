@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Control Roku</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #fff;
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      margin: 0;
+      user-select: none;
+    }
+    .card {
+      background: #1e1e1e;
+      padding: 15px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 320px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      text-align: center;
+    }
+    input {
+      width: 80%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #333;
+      background: #2b2b2b;
+      color: #fff;
+      text-align: center;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    button {
+      background: #333;
+      color: white;
+      border: none;
+      padding: 15px 0;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    button:active { background: #663399; }
+    .btn-main { background: #663399; }
+    .btn-vol { background: #2e7d32; }
+    .btn-app { background: #e50914; }
+    .btn-yt { background: #ff0000; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h2>Control Roku</h2>
+  <input type="text" id="ip" placeholder="IP del Roku (Ej: 192.168.1.75)">
+
+  <!-- Navegación y Funciones Principales -->
+  <div class="grid">
+    <button onclick="send('Back')">↩ Volver</button>
+    <button onclick="send('Up')">▲</button>
+    <button class="btn-main" onclick="send('Home')">🏠 Inicio</button>
+
+    <button onclick="send('Left')">◀</button>
+    <button class="btn-main" onclick="send('Select')">OK</button>
+    <button onclick="send('Right')">▶</button>
+
+    <button onclick="send('Rev')">⏪</button>
+    <button onclick="send('Down')">▼</button>
+    <button onclick="send('Fwd')">⏩</button>
+  </div>
+
+  <div class="grid">
+    <button onclick="send('Play')">⏯ Play/Pausa</button>
+  </div>
+
+  <!-- Controles de Volumen (Vía Wi-Fi) -->
+  <h3>Volumen</h3>
+  <div class="grid">
+    <button class="btn-vol" onclick="send('VolumeDown')">🔉 -</button>
+    <button class="btn-vol" onclick="send('VolumeMute')">🔇 Silencio</button>
+    <button class="btn-vol" onclick="send('VolumeUp')">🔊 +</button>
+  </div>
+
+  <!-- Accesos Rápidos a Canales -->
+  <h3>Accesos Rápidos</h3>
+  <div class="grid">
+    <button class="btn-app" onclick="launch('12')">Netflix</button>
+    <button class="btn-yt" onclick="launch('837')">YouTube</button>
+  </div>
+</div>
+
+<script>
+  // Cargar IP guardada
+  document.getElementById('ip').value = localStorage.getItem('roku_ip') || '';
+
+  function getIp() {
+    const ip = document.getElementById('ip').value.trim();
+    if (!ip) {
+      alert('Ingresa la IP de tu Roku');
+      return null;
+    }
+    localStorage.setItem('roku_ip', ip);
+    return ip;
+  }
+
+  function send(cmd) {
+    const ip = getIp();
+    if (!ip) return;
+    fetch(`http://${ip}:8060/keypress/${cmd}`, { method: 'POST', mode: 'no-cors' })
+      .catch(err => console.error(err));
+  }
+
+  function launch(appId) {
+    const ip = getIp();
+    if (!ip) return;
+    fetch(`http://${ip}:8060/launch/${appId}`, { method: 'POST', mode: 'no-cors' })
+      .catch(err => console.error(err));
+  }
+</script>
+
+</body>
+</html>
