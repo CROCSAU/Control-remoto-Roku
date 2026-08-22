@@ -5,71 +5,93 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Control Roku</title>
     <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
         body {
-            background-color: #121212;
+            background-color: #0f0f0f;
             color: #ffffff;
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            margin: 0;
+            padding: 15px;
         }
         .container {
-            width: 90%;
-            max-width: 360px;
-            background: #1e1e1e;
+            width: 100%;
+            max-width: 340px;
+            background: #1a1a1a;
             padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.7);
             text-align: center;
+        }
+        h2 {
+            font-size: 1.2rem;
+            margin-bottom: 12px;
+            color: #e0e0e0;
         }
         input[type="text"] {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             margin-bottom: 15px;
-            border-radius: 8px;
-            border: 1px solid #444;
-            background: #2a2a2a;
+            border-radius: 10px;
+            border: 1px solid #333;
+            background: #262626;
             color: #fff;
-            box-sizing: border-box;
-            font-size: 16px;
+            font-size: 15px;
+            text-align: center;
+            outline: none;
+        }
+        input[type="text"]:focus {
+            border-color: #6a1b9a;
+        }
+        .section {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 12px;
         }
         .grid-pad {
-            display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 15px;
+        }
+        .grid-actions {
+            grid-template-columns: repeat(2, 1fr);
         }
         button {
-            padding: 15px;
+            padding: 16px;
             font-size: 16px;
             font-weight: bold;
             border: none;
-            border-radius: 8px;
-            background: #333;
+            border-radius: 12px;
+            background: #2a2a2a;
             color: #fff;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background 0.15s, transform 0.05s;
+            user-select: none;
         }
         button:active {
-            background: #555;
+            background: #444;
+            transform: scale(0.96);
         }
         .btn-home {
-            background: #4a148c;
+            background: #512da8;
         }
         .btn-home:active {
-            background: #6a1b9a;
+            background: #673ab7;
         }
         .btn-power {
-            background: #b71c1c;
+            background: #c62828;
             grid-column: span 3;
+            padding: 14px;
         }
         .btn-power:active {
-            background: #c62828;
+            background: #d32f2f;
         }
-        .wide-btn {
+        .full-width {
             grid-column: span 3;
         }
     </style>
@@ -79,62 +101,66 @@
     <div class="container">
         <h2>Control Roku</h2>
         
-        <!-- Campo para la IP de tu Roku -->
-        <input type="text" id="rokuIp" placeholder="IP del Roku (ej: 192.168.1.50)">
+        <!-- Campo para la IP -->
+        <input type="text" id="rokuIp" placeholder="Ej: 192.168.1.50">
 
-        <!-- Botón de Apagado / Reposo -->
-        <div class="grid-pad">
-            <button class="btn-power" onclick="sendCommand('Power')">🔴 Apagar Tele / Reposo</button>
+        <!-- Botón de Apagado -->
+        <div class="section grid-pad">
+            <button class="btn-power" onclick="sendCommand('Power')">🔴 Apagar / Reposo</button>
         </div>
 
         <!-- Pad de Navegación -->
-        <div class="grid-pad">
-            <button></button>
+        <div class="section grid-pad">
+            <button style="visibility: hidden;"></button>
             <button onclick="sendCommand('Up')">▲</button>
-            <button></button>
+            <button style="visibility: hidden;"></button>
             
             <button onclick="sendCommand('Left')">◀</button>
             <button class="btn-home" onclick="sendCommand('Home')">🏠</button>
             <button onclick="sendCommand('Right')">▶</button>
             
-            <button></button>
+            <button style="visibility: hidden;"></button>
             <button onclick="sendCommand('Down')">▼</button>
             <button onclick="sendCommand('Back')">↩</button>
         </div>
 
-        <!-- Acciones Extra -->
-        <div class="grid-pad">
-            <button class="wide-btn" onclick="sendCommand('Select')">OK / Aceptar</button>
-            <button onclick="sendCommand('Play')">⏯ Play</button>
-            <button onclick="sendCommand('Rev')">⏪ Rewind</button>
-            <button onclick="sendCommand('Fwd')">⏩ Fast Fwd</button>
+        <!-- Botones de Acción -->
+        <div class="section">
+            <button class="full-width" onclick="sendCommand('Select')">OK / Aceptar</button>
+        </div>
+        
+        <div class="section grid-actions">
+            <button onclick="sendCommand('Play')">⏯ Play / Pausa</button>
+            <button onclick="sendCommand('Rev')">⏪ Rebobinar</button>
         </div>
     </div>
 
     <script>
+        // Guarda la IP automáticamente en la memoria del celular al escribirla
+        const ipInput = document.getElementById('rokuIp');
+        
+        if(localStorage.getItem('saved_roku_ip')) {
+            ipInput.value = localStorage.getItem('saved_roku_ip');
+        }
+
+        ipInput.addEventListener('input', () => {
+            localStorage.setItem('saved_roku_ip', ipInput.value.trim());
+        });
+
         function sendCommand(key) {
-            const ip = document.getElementById('rokuIp').value.trim();
+            const ip = ipInput.value.trim();
             
             if (!ip) {
-                alert("Por favor, ingresa la dirección IP de tu Roku.");
+                alert("Escribe la IP de tu Roku primero.");
                 return;
             }
 
-            // URL del protocolo de la API externa de Roku (Puerto 8060)
             const url = `http://${ip}:8060/keypress/${key}`;
 
-            fetch(url, {
-                method: 'POST'
-            })
-            .then(response => {
-                if (!response.ok) {
-                    console.error('Error al enviar el comando');
-                }
-            })
-            .catch(error => {
-                console.error('Error de red:', error);
-                alert("No se pudo conectar con el Roku. Verifica que la IP sea correcta y estén en la misma red Wi-Fi.");
-            });
+            // Usamos un objeto Image invisible para disparar la petición HTTP 
+            // evitando por completo los bloqueos de seguridad CORS del navegador móvil.
+            const img = new Image();
+            img.src = url;
         }
     </script>
 </body>
